@@ -90,4 +90,4 @@ print(f"mysql_backup.py: Time to back up [{(finish_time - start_time) / 3600} ho
 
 finish_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(finish_time))
 send_email(message = f"Success in daily mysql backup at [{finish_time}]",
-              subject = f"kbserver: Success in daily mysql backup [{finish_time}]")
+              subject = f"Success in daily mysql backup [{finish_time}]")
