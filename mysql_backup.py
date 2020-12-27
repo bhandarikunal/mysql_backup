@@ -63,7 +63,7 @@ else:
                 temp_tables = get_temp_tables(db)
 
                 for t in temp_tables:
-                    temp_tables_options = temp_tables_options + f" --ignore-table={t} "
+                    temp_tables_options = temp_tables_options + f" --ignore-table={db}.{t} "
 
             filename = f"{db}_{time.strftime(time_format, time.localtime(time.time()))}"
             filename = os.path.join(BACKUP_PATH, filename)
