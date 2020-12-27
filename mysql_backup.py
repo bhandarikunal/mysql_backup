@@ -5,6 +5,7 @@
 FREQUENCY_DAYS = 1
 NUM_BACKUPS = 1
 COMPRESS = True
+IGNORE_TEMP_TABLES = True
 BACKUP_PATH='/media/kunal/KBServerBkup/mysql'
 SYSTEM_DATABASES = ["performance_schema","information_schema","sys",
                     "mysql"]
@@ -17,6 +18,18 @@ import re
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0]))))
 
 from common_py.functions import *
+
+
+###################### Functions ############################
+
+def get_temp_tables(db):
+    temp_tables = run_sql(f"""SELECT table_name
+                              FROM information_schema.tables
+                              WHERE table_schema = '{db}'
+                              AND table_name REGEXP '(?:^|_)(?:tmp|temp|old)(?:_|$)'""")
+    temp_tables = list(temp_tables['TABLE_NAME'])
+    return temp_tables
+
 
 ###################### Main program ############################
 
@@ -44,15 +57,23 @@ else:
 
     try:
         for db in databases:
+
+            temp_tables_options = " "
+            if IGNORE_TEMP_TABLES:
+                temp_tables = get_temp_tables(db)
+
+                for t in temp_tables:
+                    temp_tables_options = temp_tables_options + f" --ignore-table={t} "
+
             filename = f"{db}_{time.strftime(time_format, time.localtime(time.time()))}"
             filename = os.path.join(BACKUP_PATH, filename)
 
             print(f"mysql_backup.py: Dumping database [{db}] to file [{filename}.*]")
 
             if COMPRESS:
-                os.system(f"mysqldump --databases {db} | gzip -c > {filename}.gz")
+                os.system(f"mysqldump --databases {db} {temp_tables_options} | gzip -c > {filename}.gz")
             else:
-                os.system(f"mysqldump --databases {db} > {filename}.sql")
+                os.system(f"mysqldump --databases {db} {temp_tables_options} > {filename}.sql")
     except:
         print("mysql_backup.py: Error backing up databases")
         send_email(message = f"Failed to backup mysql databases at [{start_time}]",
